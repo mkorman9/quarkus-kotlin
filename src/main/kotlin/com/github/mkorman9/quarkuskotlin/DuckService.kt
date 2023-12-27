@@ -21,7 +21,7 @@ class DuckService {
 
     fun findDucks(): List<Duck> {
         return jdbi.withHandle<List<Duck>, Exception> { handle ->
-            handle.createQuery("select id, name, height, created_at from ducks")
+            handle.createQuery("select id, name, height, created_at from ducks order by id")
                 .map { rs, _ ->
                     Duck(
                         id = rs.getObject("id") as UUID,
@@ -51,6 +51,30 @@ class DuckService {
         }
 
         return id
+    }
+
+    fun updateDuck(id: UUID, name: String, height: Int): Boolean {
+        return jdbi.withHandle<Boolean, Exception> { handle ->
+            val affectedRows = handle.createUpdate("""
+                update ducks set name = :name, height = :height where id = :id
+            """)
+                .bind("id", id)
+                .bind("name", name)
+                .bind("height", height)
+                .execute()
+            affectedRows > 0
+        }
+    }
+
+    fun deleteDuck(id: UUID): Boolean {
+        return jdbi.withHandle<Boolean, Exception> { handle ->
+            val affectedRows = handle.createUpdate("""
+               delete from ducks where id = :id 
+            """)
+                .bind("id", id)
+                .execute()
+            affectedRows > 0
+        }
     }
 
     companion object {

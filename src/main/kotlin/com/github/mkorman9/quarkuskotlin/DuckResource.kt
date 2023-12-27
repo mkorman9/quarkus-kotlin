@@ -1,6 +1,5 @@
 package com.github.mkorman9.quarkuskotlin
 
-import jakarta.inject.Inject
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
@@ -21,10 +20,9 @@ import java.util.UUID
 @Path("/api/ducks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(value = [])
-class DuckResource {
-    @Inject
-    lateinit var duckService: DuckService
-
+class DuckResource(
+    private val duckService: DuckService
+) {
     @GET
     fun getDucks(): List<Duck> {
         return duckService.findDucks()

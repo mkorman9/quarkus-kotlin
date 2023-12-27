@@ -2,7 +2,6 @@ package com.github.mkorman9.quarkuskotlin
 
 import com.fasterxml.uuid.Generators
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.inject.Inject
 import org.jdbi.v3.core.Jdbi
 import java.time.Instant
 import java.util.UUID
@@ -15,10 +14,9 @@ data class Duck(
 )
 
 @ApplicationScoped
-class DuckService {
-    @Inject
-    lateinit var jdbi: Jdbi
-
+class DuckService(
+    private val jdbi: Jdbi
+) {
     fun findDucks(): List<Duck> {
         return jdbi.withHandle<List<Duck>, Exception> { handle ->
             handle.createQuery("select id, name, height, created_at from ducks order by id")

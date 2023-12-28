@@ -6,11 +6,13 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 import org.jboss.resteasy.reactive.RestPath
 import org.jboss.resteasy.reactive.RestResponse
@@ -24,8 +26,14 @@ class DuckResource(
     private val duckService: DuckService
 ) {
     @GET
-    fun getDucks(): List<Duck> {
-        return duckService.findDucks()
+    fun getDucksPage(
+        @QueryParam("pageSize") @DefaultValue("10") pageSize: Long,
+        @QueryParam("pageToken") pageToken: UUID?
+    ): DucksPage {
+        return duckService.findDucksPage(
+            pageSize = Math.clamp(pageSize, 1, 100),
+            pageToken = pageToken
+        )
     }
 
     @POST

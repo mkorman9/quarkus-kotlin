@@ -2,7 +2,9 @@ package com.github.mkorman9.quarkuskotlin
 
 import com.fasterxml.uuid.Generators
 import jakarta.enterprise.context.ApplicationScoped
+import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.Jdbi
+import org.jdbi.v3.core.statement.Query
 import java.time.Instant
 import java.util.UUID
 
@@ -13,13 +15,24 @@ data class Duck(
     val createdAt: Instant
 )
 
+data class DucksPage(
+    val data: List<Duck>,
+    val pageSize: Int,
+    val nextPageToken: UUID?
+)
+
 @ApplicationScoped
 class DuckService(
     private val jdbi: Jdbi
 ) {
-    fun findDucks(): List<Duck> {
-        return jdbi.withHandle<List<Duck>, Exception> { handle ->
-            handle.createQuery("select id, name, height, created_at from ducks order by id")
+    fun findDucksPage(pageSize: Int, pageToken: UUID? = null): DucksPage {
+        return jdbi.withHandle<DucksPage, Exception> { handle ->
+            val query = when {
+                pageToken != null -> createQueryWithLimitAndToken(handle, pageSize, pageToken)
+                else -> createQueryWithLimit(handle, pageSize)
+            }
+
+            val data = query
                 .map { rs, _ ->
                     Duck(
                         id = rs.getObject("id") as UUID,
@@ -29,7 +42,26 @@ class DuckService(
                     )
                 }
                 .list()
+
+            DucksPage(
+                data = data,
+                pageSize = pageSize,
+                nextPageToken = if (data.isEmpty()) null else data.last().id
+            )
         }
+    }
+
+    private fun createQueryWithLimit(handle: Handle, pageSize: Int): Query {
+        return handle.createQuery("select id, name, height, created_at from ducks order by id limit :pageSize")
+            .bind("pageSize", pageSize)
+    }
+
+    private fun createQueryWithLimitAndToken(handle: Handle, pageSize: Int, pageToken: UUID): Query {
+        return handle.createQuery("""
+            select id, name, height, created_at from ducks where id > :pageToken order by id limit :pageSize
+            """)
+            .bind("pageToken", pageToken)
+            .bind("pageSize", pageSize)
     }
 
     fun addDuck(name: String, height: Int): UUID {

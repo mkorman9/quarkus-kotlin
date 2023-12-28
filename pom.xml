@@ -126,6 +126,7 @@
                         <option>all-open:annotation=jakarta.websocket.server.ServerEndpoint</option>
                         <option>all-open:annotation=jakarta.enterprise.context.ApplicationScoped</option>
                         <option>all-open:annotation=jakarta.enterprise.context.RequestScoped</option>
+                        <option>all-open:annotation=jakarta.persistence.Entity</option>
                         <option>all-open:annotation=io.quarkus.test.junit.QuarkusTest</option>
                     </pluginOptions>
                 </configuration>

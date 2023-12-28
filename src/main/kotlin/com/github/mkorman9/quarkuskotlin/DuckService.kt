@@ -59,7 +59,7 @@ class DuckService(
     private fun createQueryWithLimitAndToken(handle: Handle, pageSize: Int, pageToken: UUID): Query {
         return handle.createQuery("""
             select id, name, height, created_at from ducks where id > :pageToken order by id limit :pageSize
-            """)
+        """)
             .bind("pageToken", pageToken)
             .bind("pageSize", pageSize)
     }

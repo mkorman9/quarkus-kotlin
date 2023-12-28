@@ -46,7 +46,7 @@ class DuckService(
             DucksPage(
                 data = data,
                 pageSize = pageSize,
-                nextPageToken = if (data.isEmpty()) null else data.last().id
+                nextPageToken = data.lastOrNull()?.id
             )
         }
     }

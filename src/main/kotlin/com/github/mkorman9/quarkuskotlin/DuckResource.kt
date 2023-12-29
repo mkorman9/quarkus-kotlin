@@ -38,7 +38,7 @@ class DuckResource(
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    fun addDuck(@NotNull @Valid payload: DuckPayload): AddDuckResponse {
+    fun addDuck(@NotNull @Valid payload: AddDuckPayload): AddDuckResponse {
         val id = duckService.addDuck(payload.name, payload.height)
         return AddDuckResponse(id)
     }
@@ -48,7 +48,7 @@ class DuckResource(
     @Consumes(MediaType.APPLICATION_JSON)
     fun updateDuck(
         @RestPath id: UUID,
-        @NotNull @Valid payload: DuckPayload
+        @NotNull @Valid payload: UpdateDuckPayload
     ): RestResponse<Void> {
         if (!duckService.updateDuck(id, payload.name, payload.height)) {
             return RestResponse.status(400)
@@ -68,9 +68,14 @@ class DuckResource(
     }
 }
 
-data class DuckPayload(
+data class AddDuckPayload(
     @field:NotBlank @field:Size(max = 255) val name: String,
     @field:Min(value = 1) val height: Int
+)
+
+data class UpdateDuckPayload(
+    @field:Size(min = 1, max = 255) val name: String?,
+    @field:Min(value = 1) val height: Int?
 )
 
 data class AddDuckResponse(

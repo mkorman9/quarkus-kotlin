@@ -75,10 +75,19 @@ class DuckService(
         return id
     }
 
-    fun updateDuck(id: UUID, name: String, height: Int): Boolean {
+    fun updateDuck(id: UUID, name: String?, height: Int?): Boolean {
+        if (name == null && height == null) {
+            return true
+        }
+
         val affectedRows = db.update(DuckTable) {
-            set(it.name, name)
-            set(it.height, height)
+            if (name != null) {
+                set(it.name, name)
+            }
+            if (height != null) {
+                set(it.height, height)
+            }
+
             where {
                 it.id eq id
             }

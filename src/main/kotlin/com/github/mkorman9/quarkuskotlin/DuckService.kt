@@ -90,10 +90,9 @@ class DuckService(
 
     fun updateDuck(id: UUID, payload: UpdateDuckPayload): Boolean {
         val affectedRows = db.update(DuckTable) {
+            set(it.id, it.id)  // prevent empty update
             if (payload.name != null) {
                 set(it.name, payload.name)
-            } else {
-                set(it.name, it.name)  // prevent empty update
             }
             if (payload.height != null) {
                 set(it.height, payload.height)

@@ -42,11 +42,7 @@ data class AddDuckPayload(
 data class UpdateDuckPayload(
     @field:Size(min = 1, max = 255) val name: String?,
     @field:Min(value = 1) val height: Int?
-) {
-    fun anyModified(): Boolean {
-        return name != null || height != null
-    }
-}
+)
 
 @ApplicationScoped
 class DuckService(
@@ -93,13 +89,11 @@ class DuckService(
     }
 
     fun updateDuck(id: UUID, payload: UpdateDuckPayload): Boolean {
-        if (!payload.anyModified()) {
-            return false
-        }
-
         val affectedRows = db.update(DuckTable) {
             if (payload.name != null) {
                 set(it.name, payload.name)
+            } else {
+                set(it.name, it.name)  // prevent empty update
             }
             if (payload.height != null) {
                 set(it.height, payload.height)

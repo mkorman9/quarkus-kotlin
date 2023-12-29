@@ -2,9 +2,19 @@ package com.github.mkorman9.quarkuskotlin
 
 import com.fasterxml.uuid.Generators
 import jakarta.enterprise.context.ApplicationScoped
-import org.jdbi.v3.core.Handle
-import org.jdbi.v3.core.Jdbi
-import org.jdbi.v3.core.statement.Query
+import org.ktorm.database.Database
+import org.ktorm.dsl.asc
+import org.ktorm.dsl.delete
+import org.ktorm.dsl.eq
+import org.ktorm.dsl.from
+import org.ktorm.dsl.greater
+import org.ktorm.dsl.insert
+import org.ktorm.dsl.limit
+import org.ktorm.dsl.map
+import org.ktorm.dsl.orderBy
+import org.ktorm.dsl.select
+import org.ktorm.dsl.update
+import org.ktorm.dsl.where
 import java.time.Instant
 import java.util.UUID
 
@@ -23,88 +33,66 @@ data class DucksPage(
 
 @ApplicationScoped
 class DuckService(
-    private val jdbi: Jdbi
+    private val db: Database
 ) {
     fun findDucksPage(pageSize: Int, pageToken: UUID? = null): DucksPage {
-        return jdbi.withHandle<DucksPage, Exception> { handle ->
-            val query = when {
-                pageToken != null -> createQueryWithLimitAndToken(handle, pageSize, pageToken)
-                else -> createQueryWithLimit(handle, pageSize)
-            }
+        var query = db
+            .from(DuckTable)
+            .select()
+            .orderBy(DuckTable.id.asc())
+            .limit(pageSize)
 
-            val data = query
-                .map { rs, _ ->
-                    Duck(
-                        id = rs.getObject("id") as UUID,
-                        name = rs.getString("name"),
-                        height = rs.getInt("height"),
-                        createdAt = rs.getTimestamp("created_at").toInstant()
-                    )
-                }
-                .list()
+        if (pageToken != null) {
+            query = query.where(DuckTable.id greater pageToken)
+        }
 
-            DucksPage(
-                data = data,
-                pageSize = pageSize,
-                nextPageToken = data.lastOrNull()?.id
+        val data = query.map { row ->
+            Duck(
+                id = row[DuckTable.id]!!,
+                name = row[DuckTable.name]!!,
+                height = row[DuckTable.height]!!,
+                createdAt = row[DuckTable.createdAt]!!
             )
         }
-    }
 
-    private fun createQueryWithLimit(handle: Handle, pageSize: Int): Query {
-        return handle.createQuery("select id, name, height, created_at from ducks order by id limit :pageSize")
-            .bind("pageSize", pageSize)
-    }
-
-    private fun createQueryWithLimitAndToken(handle: Handle, pageSize: Int, pageToken: UUID): Query {
-        return handle.createQuery("""
-            select id, name, height, created_at from ducks where id > :pageToken order by id limit :pageSize
-        """)
-            .bind("pageToken", pageToken)
-            .bind("pageSize", pageSize)
+        return DucksPage(
+            data = data,
+            pageSize = pageSize,
+            nextPageToken = data.lastOrNull()?.id
+        )
     }
 
     fun addDuck(name: String, height: Int): UUID {
         val id = ID_GENERATOR.generate()
-        val now = Instant.now()
 
-        jdbi.withHandle<Int, Exception> { handle ->
-            handle.createUpdate("""
-                insert into ducks (id, name, height, created_at)
-                values (:id, :name, :height, :createdAt)
-            """)
-                .bind("id", id)
-                .bind("name", name)
-                .bind("height", height)
-                .bind("createdAt", now)
-                .execute()
+        db.insert(DuckTable) {
+            set(it.id, id)
+            set(it.name, name)
+            set(it.height, height)
+            set(it.createdAt, Instant.now())
         }
 
         return id
     }
 
     fun updateDuck(id: UUID, name: String, height: Int): Boolean {
-        return jdbi.withHandle<Boolean, Exception> { handle ->
-            val affectedRows = handle.createUpdate("""
-                update ducks set name = :name, height = :height where id = :id
-            """)
-                .bind("id", id)
-                .bind("name", name)
-                .bind("height", height)
-                .execute()
-            affectedRows > 0
+        val affectedRows = db.update(DuckTable) {
+            set(it.name, name)
+            set(it.height, height)
+            where {
+                it.id eq id
+            }
         }
+
+        return affectedRows > 0
     }
 
     fun deleteDuck(id: UUID): Boolean {
-        return jdbi.withHandle<Boolean, Exception> { handle ->
-            val affectedRows = handle.createUpdate("""
-               delete from ducks where id = :id 
-            """)
-                .bind("id", id)
-                .execute()
-            affectedRows > 0
+        val affectedRows = db.delete(DuckTable) {
+            it.id eq id
         }
+
+        return affectedRows > 0
     }
 
     companion object {

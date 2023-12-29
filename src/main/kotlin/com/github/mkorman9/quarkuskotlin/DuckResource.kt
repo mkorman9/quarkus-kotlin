@@ -19,6 +19,10 @@ import org.jboss.resteasy.reactive.RestResponse
 import org.jetbrains.annotations.NotNull
 import java.util.UUID
 
+data class AddDuckResponse(
+    val id: UUID
+)
+
 @Path("/api/ducks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(value = [])
@@ -39,7 +43,7 @@ class DuckResource(
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     fun addDuck(@NotNull @Valid payload: AddDuckPayload): AddDuckResponse {
-        val id = duckService.addDuck(payload.name, payload.height)
+        val id = duckService.addDuck(payload)
         return AddDuckResponse(id)
     }
 
@@ -50,7 +54,7 @@ class DuckResource(
         @RestPath id: UUID,
         @NotNull @Valid payload: UpdateDuckPayload
     ): RestResponse<Void> {
-        if (!duckService.updateDuck(id, payload.name, payload.height)) {
+        if (!duckService.updateDuck(id, payload)) {
             return RestResponse.status(400)
         }
 
@@ -67,17 +71,3 @@ class DuckResource(
         return RestResponse.ok()
     }
 }
-
-data class AddDuckPayload(
-    @field:NotBlank @field:Size(max = 255) val name: String,
-    @field:Min(value = 1) val height: Int
-)
-
-data class UpdateDuckPayload(
-    @field:Size(min = 1, max = 255) val name: String?,
-    @field:Min(value = 1) val height: Int?
-)
-
-data class AddDuckResponse(
-    val id: UUID
-)

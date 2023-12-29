@@ -2,6 +2,9 @@ package com.github.mkorman9.quarkuskotlin
 
 import com.fasterxml.uuid.Generators
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import org.ktorm.database.Database
 import org.ktorm.dsl.asc
 import org.ktorm.dsl.delete
@@ -30,6 +33,20 @@ data class DucksPage(
     val pageSize: Int,
     val nextPageToken: UUID?
 )
+
+data class AddDuckPayload(
+    @field:NotBlank @field:Size(max = 255) val name: String,
+    @field:Min(value = 1) val height: Int
+)
+
+data class UpdateDuckPayload(
+    @field:Size(min = 1, max = 255) val name: String?,
+    @field:Min(value = 1) val height: Int?
+) {
+    fun anyModified(): Boolean {
+        return name != null || height != null
+    }
+}
 
 @ApplicationScoped
 class DuckService(
@@ -62,30 +79,30 @@ class DuckService(
         )
     }
 
-    fun addDuck(name: String, height: Int): UUID {
+    fun addDuck(payload: AddDuckPayload): UUID {
         val id = ID_GENERATOR.generate()
 
         db.insert(DuckTable) {
             set(it.id, id)
-            set(it.name, name)
-            set(it.height, height)
+            set(it.name, payload.name)
+            set(it.height, payload.height)
             set(it.createdAt, Instant.now())
         }
 
         return id
     }
 
-    fun updateDuck(id: UUID, name: String?, height: Int?): Boolean {
-        if (name == null && height == null) {
-            return true
+    fun updateDuck(id: UUID, payload: UpdateDuckPayload): Boolean {
+        if (!payload.anyModified()) {
+            return false
         }
 
         val affectedRows = db.update(DuckTable) {
-            if (name != null) {
-                set(it.name, name)
+            if (payload.name != null) {
+                set(it.name, payload.name)
             }
-            if (height != null) {
-                set(it.height, height)
+            if (payload.height != null) {
+                set(it.height, payload.height)
             }
 
             where {

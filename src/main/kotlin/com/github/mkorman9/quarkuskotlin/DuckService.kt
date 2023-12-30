@@ -17,7 +17,7 @@ import org.ktorm.dsl.map
 import org.ktorm.dsl.orderBy
 import org.ktorm.dsl.select
 import org.ktorm.dsl.update
-import org.ktorm.dsl.where
+import org.ktorm.dsl.whereWithConditions
 import java.time.Instant
 import java.util.UUID
 
@@ -49,24 +49,24 @@ class DuckService(
     private val db: Database
 ) {
     fun findDucksPage(pageSize: Int, pageToken: UUID? = null): DucksPage {
-        var query = db
+        val data = db
             .from(DuckTable)
             .select()
+            .whereWithConditions {
+                if (pageToken != null) {
+                    it += DuckTable.id greater pageToken
+                }
+            }
             .orderBy(DuckTable.id.asc())
             .limit(pageSize)
-
-        if (pageToken != null) {
-            query = query.where(DuckTable.id greater pageToken)
-        }
-
-        val data = query.map { row ->
-            Duck(
-                id = row[DuckTable.id]!!,
-                name = row[DuckTable.name]!!,
-                height = row[DuckTable.height]!!,
-                createdAt = row[DuckTable.createdAt]!!
-            )
-        }
+            .map { row ->
+                Duck(
+                    id = row[DuckTable.id]!!,
+                    name = row[DuckTable.name]!!,
+                    height = row[DuckTable.height]!!,
+                    createdAt = row[DuckTable.createdAt]!!
+                )
+            }
 
         return DucksPage(
             data = data,

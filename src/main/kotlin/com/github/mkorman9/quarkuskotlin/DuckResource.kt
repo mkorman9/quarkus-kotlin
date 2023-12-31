@@ -1,5 +1,6 @@
 package com.github.mkorman9.quarkuskotlin
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import jakarta.validation.Valid
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
@@ -18,6 +19,11 @@ import java.util.UUID
 
 data class AddDuckResponse(
     val id: UUID
+)
+
+data class DuckOperationStatusResponse(
+    val status: String,
+    @field:JsonInclude(JsonInclude.Include.NON_NULL) val cause: String? = null
 )
 
 @Path("/api/ducks")
@@ -50,21 +56,35 @@ class DuckResource(
     fun updateDuck(
         @RestPath id: UUID,
         @NotNull @Valid payload: UpdateDuckPayload
-    ): RestResponse<Void> {
+    ): RestResponse<DuckOperationStatusResponse> {
         if (!duckService.updateDuck(id, payload)) {
-            return RestResponse.status(400)
+            return RestResponse.status(RestResponse.Status.BAD_REQUEST, DuckOperationStatusResponse(
+                status = "error",
+                cause = "Duck with given id was not found"
+            ))
         }
 
-        return RestResponse.ok()
+        return RestResponse.ok(
+            DuckOperationStatusResponse(
+                status = "ok"
+            )
+        )
     }
 
     @DELETE
     @Path("/{id}")
-    fun deleteDuck(@RestPath id: UUID): RestResponse<Void> {
+    fun deleteDuck(@RestPath id: UUID): RestResponse<DuckOperationStatusResponse> {
         if (!duckService.deleteDuck(id)) {
-            return RestResponse.status(400)
+            return RestResponse.status(RestResponse.Status.BAD_REQUEST, DuckOperationStatusResponse(
+                status = "error",
+                cause = "Duck with given id was not found"
+            ))
         }
 
-        return RestResponse.ok()
+        return RestResponse.ok(
+            DuckOperationStatusResponse(
+                status = "ok"
+            )
+        )
     }
 }

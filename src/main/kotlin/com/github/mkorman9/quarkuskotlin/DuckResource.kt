@@ -59,7 +59,7 @@ class DuckResource(
     ): RestResponse<DuckOperationStatusResponse> {
         if (!duckService.updateDuck(id, payload)) {
             return RestResponse.status(
-                RestResponse.Status.BAD_REQUEST,
+                RestResponse.Status.NOT_FOUND,
                 DuckOperationStatusResponse(
                     status = "error",
                     cause = "Duck with given id was not found"
@@ -79,7 +79,7 @@ class DuckResource(
     fun deleteDuck(@RestPath id: UUID): RestResponse<DuckOperationStatusResponse> {
         if (!duckService.deleteDuck(id)) {
             return RestResponse.status(
-                RestResponse.Status.BAD_REQUEST,
+                RestResponse.Status.NOT_FOUND,
                 DuckOperationStatusResponse(
                     status = "error",
                     cause = "Duck with given id was not found"

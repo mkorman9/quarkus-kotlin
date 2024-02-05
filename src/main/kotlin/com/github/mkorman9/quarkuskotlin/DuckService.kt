@@ -2,9 +2,6 @@ package com.github.mkorman9.quarkuskotlin
 
 import com.fasterxml.uuid.Generators
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.validation.constraints.Min
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.Size
 import org.ktorm.database.Database
 import org.ktorm.dsl.asc
 import org.ktorm.dsl.delete
@@ -21,28 +18,7 @@ import org.ktorm.dsl.whereWithConditions
 import java.time.Instant
 import java.util.UUID
 
-data class Duck(
-    val id: UUID,
-    val name: String,
-    val height: Int,
-    val createdAt: Instant
-)
-
-data class DucksPage(
-    val data: List<Duck>,
-    val pageSize: Int,
-    val nextPageToken: UUID?
-)
-
-data class AddDuckPayload(
-    @field:NotBlank @field:Size(max = 255) val name: String,
-    @field:Min(value = 1) val height: Int
-)
-
-data class UpdateDuckPayload(
-    @field:Size(min = 1, max = 255) val name: String?,
-    @field:Min(value = 1) val height: Int?
-)
+private val ID_GENERATOR = Generators.timeBasedEpochGenerator()
 
 @ApplicationScoped
 class DuckService(
@@ -113,8 +89,27 @@ class DuckService(
 
         return affectedRows > 0
     }
-
-    companion object {
-        private val ID_GENERATOR = Generators.timeBasedEpochGenerator()
-    }
 }
+
+data class Duck(
+    val id: UUID,
+    val name: String,
+    val height: Int,
+    val createdAt: Instant
+)
+
+data class DucksPage(
+    val data: List<Duck>,
+    val pageSize: Int,
+    val nextPageToken: UUID?
+)
+
+data class AddDuckPayload(
+    val name: String,
+    val height: Int
+)
+
+data class UpdateDuckPayload(
+    val name: String?,
+    val height: Int?
+)

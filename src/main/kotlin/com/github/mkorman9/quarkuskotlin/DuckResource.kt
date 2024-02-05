@@ -2,6 +2,9 @@ package com.github.mkorman9.quarkuskotlin
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.DefaultValue
@@ -16,15 +19,6 @@ import org.jboss.resteasy.reactive.RestPath
 import org.jboss.resteasy.reactive.RestResponse
 import org.jetbrains.annotations.NotNull
 import java.util.UUID
-
-data class AddDuckResponse(
-    val id: UUID
-)
-
-data class DuckOperationStatusResponse(
-    val status: String,
-    @field:JsonInclude(JsonInclude.Include.NON_NULL) val cause: String? = null
-)
 
 @Path("/api/ducks")
 @Produces(MediaType.APPLICATION_JSON)
@@ -45,8 +39,8 @@ class DuckResource(
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    fun addDuck(@NotNull @Valid payload: AddDuckPayload): AddDuckResponse {
-        val id = duckService.addDuck(payload)
+    fun addDuck(@NotNull @Valid request: AddDuckRequest): AddDuckResponse {
+        val id = duckService.addDuck(request.toPayload())
         return AddDuckResponse(id)
     }
 
@@ -55,9 +49,9 @@ class DuckResource(
     @Consumes(MediaType.APPLICATION_JSON)
     fun updateDuck(
         @RestPath id: UUID,
-        @NotNull @Valid payload: UpdateDuckPayload
+        @NotNull @Valid request: UpdateDuckRequest
     ): RestResponse<DuckOperationStatusResponse> {
-        if (!duckService.updateDuck(id, payload)) {
+        if (!duckService.updateDuck(id, request.toPayload())) {
             return RestResponse.status(
                 RestResponse.Status.NOT_FOUND,
                 DuckOperationStatusResponse(
@@ -94,3 +88,32 @@ class DuckResource(
         )
     }
 }
+
+data class AddDuckRequest(
+    @field:NotBlank @field:Size(max = 255) val name: String,
+    @field:Min(value = 1) val height: Int
+) {
+    fun toPayload() = AddDuckPayload(
+        name = name,
+        height = height
+    )
+}
+
+data class AddDuckResponse(
+    val id: UUID
+)
+
+data class UpdateDuckRequest(
+    @field:Size(min = 1, max = 255) val name: String?,
+    @field:Min(value = 1) val height: Int?
+) {
+    fun toPayload() = UpdateDuckPayload(
+        name = name,
+        height = height
+    )
+}
+
+data class DuckOperationStatusResponse(
+    val status: String,
+    @field:JsonInclude(JsonInclude.Include.NON_NULL) val cause: String? = null
+)

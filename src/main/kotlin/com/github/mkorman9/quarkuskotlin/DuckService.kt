@@ -2,6 +2,9 @@ package com.github.mkorman9.quarkuskotlin
 
 import com.fasterxml.uuid.Generators
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import org.ktorm.database.Database
 import org.ktorm.dsl.asc
 import org.ktorm.dsl.delete
@@ -105,11 +108,11 @@ data class DucksPage(
 )
 
 data class AddDuckPayload(
-    val name: String,
-    val height: Int
+    @field:NotBlank @field:Size(max = 255) val name: String,
+    @field:Min(value = 1) val height: Int
 )
 
 data class UpdateDuckPayload(
-    val name: String?,
-    val height: Int?
+    @field:Size(min = 1, max = 255) val name: String?,
+    @field:Min(value = 1) val height: Int?
 )

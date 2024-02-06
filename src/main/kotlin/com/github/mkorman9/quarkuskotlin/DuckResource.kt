@@ -2,9 +2,6 @@ package com.github.mkorman9.quarkuskotlin
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import jakarta.validation.Valid
-import jakarta.validation.constraints.Min
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.Size
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.DefaultValue
@@ -39,8 +36,8 @@ class DuckResource(
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    fun addDuck(@NotNull @Valid request: AddDuckRequest): AddDuckResponse {
-        val id = duckService.addDuck(request.toPayload())
+    fun addDuck(@NotNull @Valid payload: AddDuckPayload): AddDuckResponse {
+        val id = duckService.addDuck(payload)
         return AddDuckResponse(id)
     }
 
@@ -49,9 +46,9 @@ class DuckResource(
     @Consumes(MediaType.APPLICATION_JSON)
     fun updateDuck(
         @RestPath id: UUID,
-        @NotNull @Valid request: UpdateDuckRequest
+        @NotNull @Valid payload: UpdateDuckPayload
     ): RestResponse<DuckOperationStatusResponse> {
-        if (!duckService.updateDuck(id, request.toPayload())) {
+        if (!duckService.updateDuck(id, payload)) {
             return RestResponse.status(
                 RestResponse.Status.NOT_FOUND,
                 DuckOperationStatusResponse(
@@ -89,29 +86,9 @@ class DuckResource(
     }
 }
 
-data class AddDuckRequest(
-    @field:NotBlank @field:Size(max = 255) val name: String,
-    @field:Min(value = 1) val height: Int
-) {
-    fun toPayload() = AddDuckPayload(
-        name = name,
-        height = height
-    )
-}
-
 data class AddDuckResponse(
     val id: UUID
 )
-
-data class UpdateDuckRequest(
-    @field:Size(min = 1, max = 255) val name: String?,
-    @field:Min(value = 1) val height: Int?
-) {
-    fun toPayload() = UpdateDuckPayload(
-        name = name,
-        height = height
-    )
-}
 
 data class DuckOperationStatusResponse(
     val status: String,

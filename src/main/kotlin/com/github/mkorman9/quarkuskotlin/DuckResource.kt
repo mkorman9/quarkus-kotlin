@@ -1,6 +1,5 @@
 package com.github.mkorman9.quarkuskotlin
 
-import com.fasterxml.jackson.annotation.JsonInclude
 import jakarta.validation.Valid
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
@@ -11,9 +10,10 @@ import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.WebApplicationException
 import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
 import org.jboss.resteasy.reactive.RestPath
-import org.jboss.resteasy.reactive.RestResponse
 import org.jetbrains.annotations.NotNull
 import java.util.UUID
 
@@ -47,42 +47,40 @@ class DuckResource(
     fun updateDuck(
         @RestPath id: UUID,
         @NotNull @Valid payload: UpdateDuckPayload
-    ): RestResponse<DuckOperationStatusResponse> {
+    ): DuckOperationSuccessResponse {
         if (!duckService.updateDuck(id, payload)) {
-            return RestResponse.status(
-                RestResponse.Status.NOT_FOUND,
-                DuckOperationStatusResponse(
-                    status = "error",
-                    cause = "Duck with given id was not found"
-                )
+            throw WebApplicationException(
+                Response.status(Response.Status.NOT_FOUND)
+                    .entity(
+                        DuckOperationErrorResponse(
+                            status = "DuckNotFound",
+                            cause = "Duck with given id was not found"
+                        )
+                    )
+                    .build()
             )
         }
 
-        return RestResponse.ok(
-            DuckOperationStatusResponse(
-                status = "ok"
-            )
-        )
+        return DuckOperationSuccessResponse()
     }
 
     @DELETE
     @Path("/{id}")
-    fun deleteDuck(@RestPath id: UUID): RestResponse<DuckOperationStatusResponse> {
+    fun deleteDuck(@RestPath id: UUID): DuckOperationSuccessResponse {
         if (!duckService.deleteDuck(id)) {
-            return RestResponse.status(
-                RestResponse.Status.NOT_FOUND,
-                DuckOperationStatusResponse(
-                    status = "error",
-                    cause = "Duck with given id was not found"
-                )
+            throw WebApplicationException(
+                Response.status(Response.Status.NOT_FOUND)
+                    .entity(
+                        DuckOperationErrorResponse(
+                            status = "DuckNotFound",
+                            cause = "Duck with given id was not found"
+                        )
+                    )
+                    .build()
             )
         }
 
-        return RestResponse.ok(
-            DuckOperationStatusResponse(
-                status = "ok"
-            )
-        )
+        return DuckOperationSuccessResponse()
     }
 }
 
@@ -90,7 +88,11 @@ data class AddDuckResponse(
     val id: UUID
 )
 
-data class DuckOperationStatusResponse(
+data class DuckOperationSuccessResponse(
+    val status: String = "Ok"
+)
+
+data class DuckOperationErrorResponse(
     val status: String,
-    @field:JsonInclude(JsonInclude.Include.NON_NULL) val cause: String? = null
+    val cause: String
 )

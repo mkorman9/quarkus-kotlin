@@ -1,6 +1,7 @@
 package com.github.mkorman9.quarkuskotlin
 
 import jakarta.validation.Valid
+import jakarta.validation.constraints.NotNull
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.DefaultValue
@@ -14,7 +15,6 @@ import jakarta.ws.rs.WebApplicationException
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import org.jboss.resteasy.reactive.RestPath
-import org.jetbrains.annotations.NotNull
 import java.util.UUID
 
 @Path("/api/ducks")

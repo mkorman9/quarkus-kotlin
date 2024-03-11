@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import org.ktorm.database.Database
 import org.ktorm.dsl.asc
+import org.ktorm.dsl.avg
 import org.ktorm.dsl.delete
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.from
@@ -91,6 +92,16 @@ class DuckService(
         }
 
         return affectedRows > 0
+    }
+
+    fun getAverageDuckHeight(): Double {
+        return db
+            .from(DuckTable)
+            .select(
+                avg(DuckTable.height).aliased("avg_height")
+            )
+            .map { row -> row.getDouble("avg_height") }
+            .first()
     }
 }
 

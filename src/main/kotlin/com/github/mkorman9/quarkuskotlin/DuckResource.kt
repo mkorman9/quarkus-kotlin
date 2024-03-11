@@ -82,10 +82,22 @@ class DuckResource(
 
         return DuckOperationSuccessResponse()
     }
+
+    @GET
+    @Path("/avg/height")
+    fun getAverageHeight(): AverageHeightResponse {
+        return AverageHeightResponse(
+            value = duckService.getAverageDuckHeight()
+        )
+    }
 }
 
 data class AddDuckResponse(
     val id: UUID
+)
+
+data class AverageHeightResponse(
+    val value: Double
 )
 
 data class DuckOperationSuccessResponse(
